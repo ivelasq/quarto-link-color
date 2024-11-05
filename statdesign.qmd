@@ -1,0 +1,902 @@
+--- 
+title: "General COVID-19 Therapeutics Trial Design"
+author:
+  - name: Frank E Harrell Jr<br>[{{< iconify simple-icons bluesky >}}](https://bsky.app/profile/f2harrell.bsky.social)
+    url: https://hbiostat.org
+    affiliation: Department of Biostatistics<br>Vanderbilt University School of Medicine<br>VICTR Research Methods Program
+author-title: ""
+affiliation-title: ""
+published-title: ""
+date: last-modified
+format:
+  html:
+    self-contained: true
+    number-sections: true
+    number-depth: 3
+    anchor-sections: true
+    code-tools: false
+    code-fold: false
+    code-link: false
+    theme:
+      - style.css
+      - journal
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    css: h.css
+
+comments:
+  hypothesis: true
+
+link-citations: true
+---
+
+<!-- Usage:  quarto render statdesign.qmd -->
+
+::: {.quoteit}
+In the COVID-19 therapeutics arena, commonly used outcomes such as time to recovery have deficiencies.  The deficiences can be easily missed.  Outcomes such as time to improvement of one or two categories create response variables having different meanings to different patients, because the severity/impact of a given outcome will be different for patients starting at different baseline levels.  The root causes are floor and ceiling effects and forgetting that for most ordinal variables the impact of going from, for example, level 2 to level 3 is not the same as going from level 3 to level 4.  Ordinal variables should be considered on their own, and adjusted for baseline level, without the use of "change".  Use of current status also allows comparability when a clinical event override is needed.  For example, one knows where to put death in comparison to other current patient status levels, but it can be difficult to know where to place death when change in levels is used (it's even more difficult when considering non-death events such as stroke, MI, ER admission).  Ordinal variables used in their "raw" form can easily put a series of clinical events at the top of the scale.
+
+Outcomes such as days on oxygen or ventilation lose statistical power when compared to an analysis that uses all the daily patient status indicators, and they have a fairly serious problem in the handling of interruptions (missing data in a middle visit) or death.  Going back to the raw data from which these summary measures are calculated is always a good idea.
+
+These issues have a huge impact on sample size and interpretation.  While achieving optimum power, longitudinal analysis not only respects the longitudinal nature of the raw data and allows for missing measurements, but also allows you to derive any clinical readout you want from the final analysis, including 
+
+* probability of being well by a certain follow-up time
+* expected time until an event
+* incidence of mortality
+* incidence of mortality or lung dysfunction worse than x
+* mean time unwell / mean time requiring organ support
+
+The last readout has been found to be quite appealing to clinicians, and it explicitly takes death into account while elegantly allowing for days/weeks where component outcomes could not be assessed.
+
+Longitudinal outcome analysis can be conducted using either Bayesian or frequentist methods.  An overall Bayesian design would have major advanges, including
+
+* the ability to stop slightly earlier with evidence for efficacy
+* the ability to stop much earlier for futility
+* no need for scheduling data looks; Bayes allows on-demand evidence assessment
+* ability to adapt, drop arms, add new arms
+* provides direct evidence measures, not the probability of getting surprising data IF​​ the treatment doesn't work
+* directly incorporates clinical significance, e.g., you can compute the probability that the treatment effect is more than a clinically trivial amount
+* provides much simpler interpretation of multiple outcomes as the Bayesian evidence for a treatment effect on one outcome is not discounted by the fact that you looked at other outcomes
+
+:::
+
+This document covers general design and analysis issues and recommendations that pertain to COVID-19 therapeutic randomized clinical trials.  Experimental designs are particular to therapies and target patients so are covered only briefly, other than sequential designs which are quite generally applicable.  Some of the issues discussed here are described in more detail at [hbiostat.org/proj/covid19](https://hbiostat.org/proj/covid19) where several sequential clinical trial simulation studies may also be found.
+
+For reasons detailed below, we propose that the default design for COVID-19 therapeutic studies be Bayesian sequential designs using high-information/high-power ordinal outcomes as overviewed in [this video](https://vbiostat2.app.vumc.org/index.php/s/tNo6T7sk4qBtFAD).
+
+The material on selection and construction of outcome variables applies equally to Bayesian and traditional frequentist statistical analysis.  The following Design section includes some general material and lists several advantages of continuous learning Bayesian sequential designs.  Before discussing design choices, we summarize the most common statistical pitfalls in RCTs and contrast frequentist and Bayesian methods.  This is important because we recommend that a Bayesian approach be used in the current fast-moving environment to maintain flexibility and accelerate learning.
+
+# Most Common Pitfalls in Traditional RCT Designs
+
+The most common outcome of a randomized clinical trial is a p-value greater than some arbitrary cutoff.  In this case, researchers who are aware that [absence of evidence is not evidence of absence](https://www.bmj.com/content/311/7003/485) will conclude that the study is inconclusive (especially if the confidence interval for the treatment difference is wide).  More commonly, the researchers or a journal editor will conclude that the treatment is ineffective.  This should raise at least five questions.
+
+* What exactly is the evidence that the active treatment results in similar patient outcomes as control?
+* What was the effect size assumed in the power calculation, and was it greater than a clinically relevant effect?  In other words was the sample size optimistically small?
+* Did the outcome have the most statistical power among all clinically relevant outcomes?
+* What would have happened had the study been extended?  Would it have gone from an equivocal result to a definitive result?
+* If the conclusion is "lack of efficacy", could we have reached that conclusion with a smaller number of patients randomized by using a sequential design?
+
+Powering a study to detect a miracle when all that happened is a clinically important effect is unfortunately all too common.  So is the use of inefficient outcome variables.
+Fixed sample size designs, though easy to understand and budget, are a key cause of wasted resources and all too frequently result in uninformative studies.  The classical sample size calculation assumes a model, makes assumptions about patient-to-patient variability or event incidence (both of these assumptions are in common between frequentist and Bayesian approaches) and then assumes an effect size "not to miss".  The effect size is usually overoptimistic to make the budget palatable.  A continuously sequential Bayesian design allows one to run the study until
+
+* there is strong evidence for efficacy
+* there is moderately strong evidence for harm
+* there is moderately strong evidence for similarity
+* the probability of futility is high, e.g., the Bayesian predictive probability of success is low given the current data even if the study were to progress to the maximum affordable sample size
+
+The idea of experimenting until one has an answer, though routinely practiced by physicists, is underutilized in medicine.
+
+A second major statistical pitfall is inflexibility such that the design cannot be modified in reaction to changing disease or medical practice patterns after randomization begins, otherwise one would not know how to compute a p-value as this requires repeated identical sampling.
+
+See [this](https://hbiostat.org/bayes/bet/design) for a full Bayesian design that solves many of the problems in clinical trials.
+
+# Contrasting Bayesian and Frequentist Statistical Methods
+
+<h3>The Frequentist Paradigm</h3>
+<img src="freqmap.png" width=120%>
+
+<h3>The Bayesian Paradigm</h3>
+<img src="bayesmap.png" width=120%>
+
+The design, execution, and analysis will differ according to whether a classical frequentist^[_Frequentist_ is the name of the classical statistical paradigm because it relies upon the relative frequency notion of probability and does not entertain subjective probabilities.  This is tied to the notion of repeated sampling, and the sampling frame of reference or sample space.] or Bayesian approach is chosen.  Bayesian approaches are generally more flexible and are especially efficient at dropping ineffective treatments earlier because Bayesian analysis allows for more frequent data looks^[_Data look_ refers to comparing the outcomes between treatment groups, i.e., unblinded analysis.].  A huge advantage of Bayes is the ability to extend a promising study, without penalty, when evidence is equivocal.  The reason for a lack of a penalty is that upon extension the new data merely supersede the earlier data in the Bayesian posterior probability calculation^[There is no free lunch in extending a study.  The Bayesian approach is honest in that if the new data are less impressive than the old, the evidence for efficacy will diminish.  The fact that extension may diminish the odds of efficacy is precisely what makes it honest to enhance the odds when either the new data are more impressive or a higher sample size with similar overall efficacy makes the posterior distribution sharper without shifting it.]
+
+<a name="bftable"></a>
+
+In what appears below^[Thanks for input from Andrew Hartley of PPD], _effect_ refers to the true unknown treatment effect that generated the observed data, i.e., the systematic signal that needs to be disentangled from all of the random variation.  In frequentist parlance this would be called the unknown population treatment effect, and in the Bayesian world is the unknown parameter that is part of the process generating the current dataset, which may in some cases also be a population parameter if repeated sampling were possible (i.e., if a clinical trial could be repeated with no changes in protocol or concomitant therapies).  The mode of Bayesian analysis referred to here is posterior analysis using a posterior ("post data") probability distribution^[There is another school of Bayesian inference based on Bayes factors which is less flexible and less directly applicable to decision making.]. In the probability notation below, P(A) means the probability that assertion A is true, and P(A|B) means the conditional probability that A is true given that B is true.  _Decision_ refers to playing the odds to maximize the chance of making the right decision analogous to betting decisions made in a round of a card game.  Bayesian formal decision analysis, in which the optimal decision is chosen to maximize expected utility, is also available, but requires cost/utility functions that are difficult to specify when there are multiple stakeholders.  That approach is not discussed further.
+
+| Concept | Frequentist | Bayesian |
+|---------|-------------|----------|
+|Sample   | One of a series of identically distributed samples | Sample may be one of a kind, or replicable |
+|Sample size | Maximum sample size usually fixed; selected to achieve a pre-specified power to detect a (usually exaggerated) single effect size | May be left unspecified, or compute an _expected_ sample size; selected to provide pre-specified chance of meeting the study objective, possibly balanced against cost of research |
+|Effect   | Population effect | Effect generating one dataset, or population effect |
+|Probability| Long-run relative frequency; applies only to repeatable experiments | Degree of belief, quantification of veracity, or long-run relative frequency; applies even to one-time events e.g. P(efficacy in context of current concomitant medications) |
+|Probabilities computed|Chances about data|Chances about effects that generated the data| 
+|Goal|Conclusions|Decisions|
+|How goal is reached|Infer an assertion is true if assuming it does not lead to a "significant" contradiction|High probability of being correct allows one to act as if an assertion is true whether or not it is true|
+|Method of inference|Indirect: assume no effect, attempt proof by contradiction|Direct: compute P(effect \| data and prior)|
+|Direction of evidence|Evidence against an assertion|Evidence in favor of an assertion|
+|Primary evidence measure for fixed $n$ studies with one data look|p-value: P(another sample would have data more extreme than this study's \| H$_0$)|P(efficacy \| data, prior)|
+|Evidence measure for sequential study|p-value not available; can only use a p-value cutoff $\alpha^*$ that controls overall type I probability $\alpha$|P(efficacy \| current cumulative data, prior)|
+|Possible error with one data look|$\alpha$=Type I: P(data are impressive \| no effect) = P(p-value < $\alpha$)|P(inefficacy) = 1 - P(effect)|
+|Possible error from sequential looks|P(p-value < $\alpha^*$ \| H$_0$) at earlier, current, or **future** looks|current P(inefficacy) = 1 - P(effect)|
+|Medical diagnosis analogy|$\alpha$=1 - specificity = P(test positive\| disease absent)|P(disease is present \| test result)|
+|External information needed|None, at the cost of indirectness|Directness, at the cost of specifying a prior|
+|Objectivity|Objective until translating evidence about data into evidence about effects|Subjective choice of prior, then objective actionability|
+|Calculations|Simplified by assuming H$_0$ when design is simple|Can be complex|
+|Calculations required for adaptive or sequential designs|Complex one-off derivations caused by complex sampling distributions|No additional complexity since computing P(effect) not P(data)|
+|Sequential trials|Conservative due to penalty for past and future looks|Efficient because looking often at data doesn't modify how one computes P(effect); older evidence merely superseded by latest data|
+|Flexibility|Limited because design adaptations change $\alpha$ due to opportunities for extreme data|Unlimited within constraints of good science and pre-specification|
+|Sample size extension|Complex and requires an $\alpha$ penalty, making the added patients less informative|Trivial, no penalty|
+|Actionability|Unclear since p-values are P(extreme data \| no effect) |Probabilities are about quantities of direct clinical interest: P(effect \| current information and prior)|
+
+The argument against Bayes focuses on the need to choose a prior distribution.  As the sample size increases, this argument becomes inconsequential, but it is important otherwise.  The Resources section below covers many aspects of choice of prior and provides links to many resources.  Some key points are as follows.
+
+* One always has prior information that will improve the analysis.  For example, one may know that a therapy is not a cure (e.g., the odds ratio must be $> 0$) but is instead an incremental therapy such that it is very unlikely that, e.g., an odds ratio is less than 0.5.
+* In a development program, the sponsor can use best available information that leads to optimistic priors when engaging in internal decision making.
+* When a pivotal study is to influence medical practice or drug licensing, it is usually more appropriate to provide evidence that would convince all stakeholders^[A possible exception to the avoidance of optimistic priors in pivotal studies is the use of strong phase II data in formulating a prior for a phase III study when the phase II study used the same dose, endpoints, blinding, etc. as the phase III study.].  A reasonable skeptical prior for many treatment studies where the efficacy parameter is captured as an odds ratio (OR) is constructed as follows:
+   + Assume that the treatment is equally likely to harm as it is to benefit patients, i.e. P(OR > 1) = P(OR < 1) =  $\frac{1}{2}$.
+   * Assume that it is unlikely that the treatment effect is great, i.e., P(OR < a) = p, e.g. P(OR < $\frac{1}{2}$) = 0.05.  By symmetry, the probability of great harm is also assumed to be small, e.g., P(OR > 2) = 0.05.
+   * See [this](https://hbiostat.org/proj/covid19/bayesplan.html#prior) for more details about prior specification
+
+To visualize prior distributions and the sample size-dependent effect they have on the posterior probability distribution for efficacy, consider a two-arm study with a binary endpoint where efficacy is summarized by an odds ratio.  A series of prior distributions is drawn below, satisfying P(OR < 0.5) = P(OR > 2) = p for varying tail probabilities p.  When there is a high (0.4) chance that the unknown effect is very large, the prior on this log odds scale is quite flat (uninformative on that scale).
+
+Suppose the true odds ratio is 0.7.  A sample of size n=400 is drawn under this effect where the probability of an event in the control group is 0.15.  Draw a sample of size n=400 (200 in each group) and approximate the data likelihood using a normal distribution.  In the random sample the observed sample odds ratio happens to also be about 0.7.  Compute the posterior distribution under the above series of priors.  Now sample an additional 400 patients and do a combined analysis of 800 patients and show the posterior distributions.  Again the sample OR happens to be near 0.7.  The effect of the choice of priors is less with n=800.  The priors pull the observed OR of about 0.7 (log = -0.36) closer to an OR of 1.0 (zero on the log scale), especially for the three most skeptical priors.
+
+<a name="priorex"></a>
+
+<img src="priors.png" width="90%">
+
+Another reason to use a skeptical prior in a sequential trial is that if the trial stops early for efficacy, the prior will "pull back" the posterior distribution towards the prior by a correct amount according to how early the trial was stopped (the effect of the prior wears off the later it is stopped).  When the entire posterior distribution for an unknown effect is pulled towards "no effect", any point estimate from the distribution is likewise pulled back.  Contrast that with the frequentist sample estimate, which will be biased.  The following graph provides an example from a simulated trial with a look after each patient completes follow-up, where efficacy is indicated by a positive mean.  _Estimated efficacy_ is computed at the instant of early stopping^[Bayesian clinical trial simulation simulates trials whose data are generated from an entire distribution of effects, one effect chosen per simulated trial.  The goal is to show that whatever unknown effect generated the data can be recovered, not, as in frequentist analysis, to determine how often evidence for efficacy was present when all trials were generated under the same zero efficacy assumption.].
+
+<img src="estmy-1.png" width=90%>
+
+This skeptical prior approach was used in the ORCHID Hydroxychloroquine trial for efficacy assessment.  @spi04bay present a "community of priors" approach which was also used in ORCHID: a flat prior was used for assessment of harm.
+
+To get a better picture of what is entailed with Bayesian sequential evidence assessment, consider a simulated two-arm trial with a binary endpoint where the true unknown treatment effect is an odds ratio of 0.7, which converts a control outcome probability of 0.15 to a treatment incidence of 0.11.  Suppose that the maximum sample size is n=1000 and that a data look occurs after each patient's follow-up is completed.  The first analysis occurs when there is at least one event in each treatment arm.  The prior distribution for the treatment effect is such that P(OR < $\frac{1}{2}$) = 0.05, which entails a standard deviation of 0.42 on the log(OR) scale.  The following graph shows the unfolding posterior distributions for the OR which are drawn every 100 looks.  The vertical red line marks the true unknown OR.  The look numbers appear next to each curve.  The prior distribution function is in blue.  This equals the posterior distribution when the sample size is zero.  The prior distribution is symmetric about zero on the log OR score, and the prior median treatment effect is OR=1.0. The prior encodes a relatively high probability of clinically significant harm (OR > 1.15).
+
+<img src="seqpost.png" width=85%>
+
+From each of the nearly 1000 looks the posterior probability that OR < 1 (efficacy) is computed, and so is the nominal p-value for testing H$_0$:OR=1.
+
+<img src="pvalpp.png" width=80%>
+
+At any data look the posterior probability is self-contained and has all of its implied meaning.  Stopping on the basis of this probability does not change its interpretation in any way in the Bayesian world.  On the other hand, nominal p-values are difficult to interpret and the forward flow of time is not considered in the computation of $\alpha$.  At a given look, $\alpha$ penalizes the result for having made earlier inconsequential looks, and for later looks that have yet to occur.  These multiplicities make frequentist inference inefficient when there are many data looks, hindering rapid learning.
+
+##### Resources
+* [Bayes for evaluating treatments](https://hbiostat.org/doc/bayes/course.html) comprehensive notes and resources
+* Simulation study of Bayesian analysis with [infinitely many data looks](http://fharrell.com/post) in a continuously sequential design
+* [Language for communicating frequentist results about treatment effects](https://discourse.datamethods.org/t/language-for-communicating-frequentist-results-about-treatment-effects)
+* Articles about [choosing prior distributions](https://hbiostat.org/papers/Bayes/prior)
+* @spi04bay
+* [Bayesian re-analysis of clinical trial data](https://discourse.datamethods.org/t/bayesian-re-analysis-of-clinical-trial-data)
+* [Discussion on why Bayes for clinical trials](https://discourse.datamethods.org/t/discussion-why-bayes-for-clinical-trials)
+
+## What Does Type I Probability Protect Against?
+
+The argument is frequently made that a classical approach is needed because it protects type I error $\alpha$.  One must understand what exactly the type I probability is a probability of.  It is the probability of observing data more extreme^[Officially the definition of type I probability is the probability of observing data **as** or more extreme than those observed.  For continuous outcomes, the probability of observing data _as_ extreme as those observed is zero, so the probability of observing data _as or more_ extreme equals the probability of observing data _more_ extreme.] than those observed in the study were the null hypothesis H$_0$ true.  Extreme data (large observed efficacy) triggers an assertion of efficacy, so type I is P(asserting efficacy | no efficacy).  It is important to note that $\alpha$ relates only to long-run statistical properties and has nothing do with with actual data.  It is computed from data _tendencies_, _intentions to analyze_ (e.g., number of data looks), and properties of the statistical test.
+
+A medical diagnosis analogy may be helpful.  Specificity is the probability that a diagnostic test will be negative if there is no disease, so 1 - specificity is equivalent to $\alpha$ in statistical testing.  Preserving $\alpha$ is equivalent to controlling the probability of getting a positive test when a patient does not have disease.  Of more interest is the probability of disease given **whatever** the test result.
+
+A very common misconception is that $\alpha$ is the probability of making a mistake in saying that a treatment works.  That cannot be the case.  In medical diagnosis that would be P(disease absent | positive test) which is one minus the _predictive value positive_ not one minus _specificity_.  So type I probability is not the probability of making an error; it is the probability of making an assertion of an effect when there is no effect.  It is the probability of making an assertion of an effect when _any_ assertion of an effect would by definition be wrong.
+
+Suppose that at the 400$^\text{th}$ data look the current probability of positive efficacy is 0.98 using an agreed-upon skeptical prior.  The study intends to have 500 data looks.  Someone points out that if the treatment is irrelevant, the probability $\alpha$ is 0.2 of finding impressive data (asserting efficacy) at at least one of the 500 looks.  You ask them "What is the relevance of that now? What is wrong with the 0.98 computed on data we actually have on hand?"^[In the context of ignoring what _might have happened_ in favor of _what did happen_, a geneticist once said that if you have measured a patient's lipid levels, that knowledge trumps the patient's genetic predisposition to hyperlipidemia.].  Type I probability $\alpha$ is the chance of what _might ever happen_ in a study with a specified schedule of data looks, if the treatment is irrelevant.  Once data are available this pre-study probability is no longer relevant, and instead the interest is focused on the following: Given the data currently available what is the chance the treatment is (in)effective?  This is the Bayesian posterior probability.
+
+If a patient undergoes a long series of medical diagnostic tests, the chances of at least one positive test increases even if there is no disease.  Is the answer to limit the number of tests regardless of data?  The optimum approach is to develop a utility function taking into account costs and outcomes and to solve for the testing strategy optimizing the expected utility, which is a function of utilities and probabilities of disease.  Short of having a utility function, estimating probabilities of disease will lead to good medical decisions.  P(disease) is merely updated every time a new test is ordered.  Testing may stop when the probability is sufficiently definitive or other tests are weak enough so that further testing is futile.
+
+Continuing the medical testing analogy, suppose that a patient with certain symptoms underwent a series of medical tests, and the patient's current probability of the disease in question is 0.9 (similar to Bayesian probability of efficacy).  Someone computes for another patient, one known to not have the disease, the probability that at least one of the tests is positive is 0.2 (similar to type I probability $\alpha$).  The person cautions the physician that her diagnostic strategy had a 0.2 probability of at least one positive test even if the patient is disease-free.  The physician rightly counters with "You suppose that a patient is disease-free.  That's the unknown that I'm trying to **determine** for my patient.  The 0.9 I computed is valid and does not need to account for the 0.2.".
+
+Bayesian methods effectively deal with the probability of disease (here, the probability of a treatment effect).  The only criticism of the Bayesian approach can be that this probability is miscalibrated.  It can only be miscalibrated if at least one of the following obtain (the first two being in common with the frequentist approach):
+
+* the experimental design is biased so the data are biased
+* the statistical model does not fit the data
+* the prior distribution chosen for the analysis conflicts with the prior chosen by the person judging the calibration of the posterior probability
+
+Thus the issue with Bayes has nothing to do with type I probability but instead with the choice of priors.  Priors focus the controversy into one dimension.
+
+**High-Level Summary: Why $\alpha$ Is Not Relevant to Bayesian Designs**
+
+* Bayes concerns itself with uncertainties about the hidden **data generating** mechanism (e.g. true treatment effect)
+* Type I probability $\alpha$ concerns itself with uncertainties about **data**
+* $\alpha$ is the probability of seeing impressive data _in general_ **if** the treatment is irrelevant
+* $\alpha$ is the probability of **asserting** efficacy when **any** assertion of efficacy would be false
+* $\alpha$ is a pre-study probability and doesn't involve any data from your study
+* $\alpha$ is not related to the chance the treatment works
+* $\alpha$ is not the probability of a false positive result
+* A posterior probability is a function of _your_ current data and the prior
+* One minus post. prob. is the prob. of making a mistake in acting as if the treatment works 
+* The meaning of the post. prob. is the same no matter
+   + when it is computed or
+   + whether it is part of a stopping rule
+* Example: 
+   + A physician orders a series of diagnostic tests $\rightarrow$ probability of disease = 0.9
+   + Another physician worries, because for patients _in general_ who are _known_ to be disease free, prob. of getting at least one positive test is 0.2 (1 - combined specificity)
+   + First physician reacts:
+      + Disease status is what I'm trying to _determine_
+      + Test specificities do not require discounting the 0.9
+
+α not the probability of making a mistake in acting as if a treatment is effective.  It applies rather to the frequentist notion of the frequency of observing impressive data, in studies in general, if the treatment is irrelevant (one might even say that α conditions on the sample size being zero since it doesn't use any actual data in its calculation).  As such α is not the probability that a positive is false (the probability that a positive finding is wrong), and controlling α just controls the rate at which assertions of efficacy are made, without shedding light on the veracity of any one assertion.  But skepticism about treatment effectiveness is very appropriate.  We propose that the skepticism be injected into the Bayesian prior distribution rather then in controlling assertion probabilities, e.g., by using a prior on a hazard or odds ratio R such that P(R < 1/2) = P(R > 2) = 0.05 (equal chance of benefit as harm).   If a treatment is deemed effective when a probability of effectiveness is for example 0.97 we propose highlighting to decision makers the false positive probability of 0.03—the chance that we are wrong in asserting effectiveness at the instant the assertion is made.  This Bayesian approach will optimize the chance of making the right decision whether it's a positive or a negative decision, and it allows for fully sequential monitoring of evidence thereby minimizing the expected sample size.  The skeptical prior also correctly "pulls back" an efficacy estimate upon early stopping for efficacy, to avoid exaggerating efficacy.  We propose that α be considered only for purely frequentist designs that rely on frequentist statistical tests.
+
+##### Resources
+
+* [Controlling α vs. Probability of a Decision Error](https://hbiostat.org/bbr/alpha.html)
+* [Discussions about type I probability](https://discourse.datamethods.org/t/what-is-type-i-error)
+
+# Design
+
+There are many classes of experimental designs that are relevant to COVID-19, including
+
+* classic parallel-group fixed sample size RCTs
+* crossover studies (which are expected to be used infrequently in COVID-19)
+* sequential studies
+* adaptive designs including alteration of probabilities of randomization to a specific therapy for new patients as experience accrues on previously randomized patients in the trial
+* trials that are sequential (but are not adaptive in the sense above) including dropping and adding treatment arms as experience accumulates
+* SMART trials in which a patient may be re-randomized as her participation in the trial proceeds
+
+This list does not directly address platform and master protocol designs which are becoming increasingly important in COVID-19.
+
+Sequential studies include group sequential trials, for which
+frequentist statistical methods have been used for decades and for
+which adjustments for multiplicities caused by a small number of data
+looks are only moderately conservative.  Continuously sequential trials
+are less often used but have great potential to accelerate learning in
+a pandemic.  These usually utilize Bayesian methods because there are
+no "data look multiplicities" in the Bayesian paradigm.  This is
+because newer information merely supersedes statistical information
+assessed at earlier looks.  By allowing unlimited data looks, DSMBs
+are given maximum flexibility.  This is especially beneficial in the
+current environment in which rapidly evolving information makes it
+difficult or suboptimal to plan DSMB meetings far in advance.  It is
+usually advised that somewhat skeptical prior distributions be used in
+sequential studies.  Among other things, this will ensure that should
+a study be stopped early due to strong evidence for efficacy, efficacy
+will not be overestimated.
+
+Whether sequential or adaptive, a key advantage of the Bayesian
+approach, besides providing probabilities of efficacy, inefficacy,
+similarity, non-inferiority, or harm, is that Bayesian methods
+for complex designs are no more complex than Bayesian analysis for
+simple classical designs.  The frequentist paradigm requires complex
+analytical approaches to account for changes in the sample space that
+result from complex designs.  Bayesian analysis does not need to
+consider the sample space, only the parameter space.  Put another way, when computing probabilities about data (e.g., p-values), one must consider opportunities for different data to have arisen.  Probabilities about parameters (e.g., P(odds ratio < 1)) do not involve "what could have happened".
+
+##### Resources
+* [Bayes for Evaluating Treatments](https://hbiostat.org/bayes/bet)
+* Resources for [COVID-19 RCT design](https://hbiostat.org/proj/covid19)
+* [Simulating power](https://hbiostat.org/R/Hmisc/markov) of Markov ordinal longitudinal clinical trials
+
+## Sample Size
+
+A Bayesian sequential design requires sample size computation only for budget and duration planning.  The sequential design allows one to experiment until there is sufficient evidence in one direction, instead of making assumptions about event incidence and continuous response variances.  A frequentist sample size estimate serves as a reasonable estimate of the average/expected sample size for a Bayesian sequential design.  Simulations result in better understanding of the number of patients needed to achieve high Bayesian power, i.e., the number needed to ensure that the posterior probability will exceed some value under an assumption about the treatment effect.
+
+Detailed examples of computing power so that sample sizes may be estimated for ordinal Markov longitudinal outcomes may be found at [hbiostat.org/R/Hmisc/markov](https://hbiostat.org/R/Hmisc/markov).  For univariate outcomes many Bayesian simulations are covered [here](https://hbiostat.org/bayes/bet/design).
+
+##### Resources
+* Markov ordinal longitudinal model [tutorial](https://onlinelibrary.wiley.com/doi/10.1002/sim.10133)
+* Proportional odds model sample size estimation
+   + [General methods](https://hbiostat.org/doc/bbr.pdf) Section 7.8.3
+   + General method [applied to COVID-19 ordinal outcomes](https://hbiostat.org/proj/covid19/bayesplan.html)
+   + [Simulations](https://hbiostat.org/proj/covid19/bayesplan.html) of Bayesian power and number of looks to achieve a given probability of a large posterior probability
+   + Examples showing how [power varies with outcome category relative frequencies](https://fharrell.com/post/ordinal-info)
+* [General Bayesian sample size approaches](https://hbiostat.org/doc/bayes/course.html#sample-size-estimation)
+* [Bayesian power simulation](https://hbiostat.org/bayes/bet/design) for time-to-event and univariate ordinal outcome comparisons
+* [Sample size simulations](https://fharrell.com/post/yborrow) allowing a treatment effect to be different for death than for nonfatal outcomes
+
+
+## Stratification and Blocking
+
+Clinical trials often fail to adjust for major prognostic factors (see Covariate Adjustment below) but include in the model variables that explain less outcome variation.  For example, many trials adjust for clinical site in the model (often as a random effect) but do not adjust for a simple variable that may easily explain 10-fold more outcome variation: age.  Key guidance on this point is from @sen04con and @sen10com:
+
+> The decision to fit prognostic factors has a far more dramatic effect on the precision of our inferences than the choice of an allocation based on covariates or randomization approach and one of my chief objections to the allocation based on covariates approach is that trialists have tended to use the fact that they have balanced as an excuse for not fitting.  This is a grave mistake ... My view ... was that the form of analysis envisaged (that is to say, which factors and covariates should be fitted) justified the allocation and _not vice versa_.
+
+Some investigators confuse the idea of stratification with the idea of balancing the patient sample.  For example, one may want to ensure that patients of low socioeconomic status (SES) are well represented in a study.  But if a baseline variable is not included in the model it does not need to be stratified on, as the only statistical reason for stratification is to make the treatment assignment orthogonal to the covariate for the sake of efficiency^[If socioeconomic status is included as a covariate it should be modeled at the highest resolution available in the data.  See [here](https://discourse.datamethods.org/t/stratification-block-randomization-etc) for a discussion of blocking and stratification.  Achieving representative SES may best be accomplished by how clinical sites are targeted.].
+
+Regarding blocked randomization, a typical example being construction of blocks of either 4 or 6 patients with exactly half of the patients getting treatment B in any block, is sometimes needed to avoid stopping a study at "a bad time" with very uneven allocation.  Blocking is also used to better mask the allocation.  But it is not always needed.  Problems with blocking within small clinical sites have been demonstrated.
+
+# Outcomes {#sec-outcomes}
+
+A clinical trial's primary outcome measure should have the following attributes^[Thanks to Dan Rubin of FDA CDER Office of Biostatistics for valuable input]: it
+
+* gives credit to a treatment for good outcomes that matter to patients
+* penalizes a treatment when the treatment causes serious adverse outcomes
+* has as few tied values as possible; the more continuous the measure the higher the statistical power and the lower the sample size
+* is measured over the relevant clinical time course
+* does not have its interpretation clouded by rescue therapy or intervening events
+* is interpretable to clinicians
+* is sensitive for detecting treatment effects
+* captures the main aspects of feeling/function/survival for the disease
+* allows for simple and complete data capture while handling partially available data with minimal hidden assumptions
+
+Some of these attributes are expanded upon in @sec-outcome-classes.
+
+Analysis should stay close to the raw data in order to maximize power and minimize problems with missing data.  Recognize that having a specific clinical quantity of interest in mind does not imply that raw data be reduced to that measure, but instead that an efficient analysis of raw data have its results stated in various clinically relevant ways, as depicted in the following diagram.
+
+-------------------------
+
+**Clinical Relevance is Achieved by Estimation of Quantities of Interest After Analyzing Raw Data** <br><br> **Not From Reducing Raw Data to Quantities of Interest**<br><br>Use many one-number summaries from a longitudinal current status analysis; don't use one-number summaries of raw data (e.g., time to recovery)
+
+```{mermaid}
+flowchart TD
+CR[Clinically Relevant Status<br>And Event Severities<br>Assessed Daily]
+S[Statistical Analysis<br>Based On<br>Raw Data]
+Pow[Power Comes From<br>Breaking Ties in Outcomes:<br>Make Outcome Resemble a<br>Longitudinal Continuous Response]
+O[Estimation of Clinical<br>Quantities of Interest]
+E["Examples:<br>P(State y or Worse)<br>As a Function of<br>Time and Treatment<br><br>Mean Time in State(s) e.g.<br>Mean Days Unwell<br>(includes death & hospitalization)"]
+CR --> O
+S  --> O
+S  --> Pow
+O  --> E --> R[Clinical Relevance<br>and<br>High Power]
+```
+--------------------------
+
+A simple example of this principle is systolic blood pressure (SBP) as a response variable in a single-arm study.
+
+* Clinical target may be reducing SBP to < 140mmHg
+* Don't dichotomize SBP raw data at 140
+* Suppose mean SBP after treatment is 130mmHg and SD 10mmHg
+* Estimate of P(SBP < 140) = normal cumulative distribution function evaluated at $\frac{140 - 130}{10}$ = $\Phi(\frac{140 -130}{10})$ = $\Phi(1)$
+* P(SBP < 140) = 0.84
+* Precision of $\Phi(1)$ is higher than proportion of patients with SBP < 140
+   + accounts for close calls etc.
+* Leads to much higher-powered treatment comparison on SBP
+* Parallel-group design can estimate P(SBP < 140 | treatment) without assuming a normal distribution
+
+One-number summaries of non-trivial raw data result in loss of power, and surprisingly, cloud clinical interpretations.  Examples:
+
+* Time to recovery (TTR) in COVID-19
+   + deaths are treated the same as non-recovery
+   + a non-recovered patient who requires a ventilator is considered the same as a non-recovered patient who has a persistent cough and did not even need hospitalization
+   + gaps in data collection make it impossible to determine TTR for a patient
+   + "unrecoveries" after a patient is classified as having recovered are ignored
+   + "close calls" to recovery are ignored
+* Ventilator-free days (VFD) in intensive care medicine resource
+   + difficulty in placing death on the scale
+   + no easy way to summarize the one-number summaries
+      * too many ties for median VFD to work
+      * the mean cannot be computed because death makes the scale a non-interval scale
+     * can't handle data collection gaps
+
+
+## Classes of Outcomes {#sec-outcome-classes}
+
+The choice of the primary outcome measure is all important in all RCTs.  It becomes even more important in a pandemic where learning needs to be accelerated, sample size may be at a premium, and power must be optimized.  Some classes of endpoints include the following, with comments regarding statistical efficiency/information and power (this applies to both Bayesian power and frequentist power).
+
+| Type | Efficiency | Comments |
+|------|------------|----------|
+| binary | minimum | assumes time is not important |
+| time to binary outcome or union of a number of binary outcomes (time until first event) | high if event is very frequent | |
+| continuous response (e.g. blood pressure) | maximum power among univariate outcomes | outcome measured at a single follow-up time |
+| ordinal response measured at a single time from randomization | high if at least 4 well-populated categories | outcome measured at a single time |
+| longitudinal ordinal responses measured e.g. daily or weekly | very high if at least 4 well-populated categories | |
+| longitudinal continuous response | highest | |
+
+For an ordinal hierarchical outcome, it doesn't have to be the case that only one outcome in a given time interval be counted.  Common co-occurring events can be given their own category that is counted as worse than either event alone.  Such a scale would be defined using the following example score mappings: 0=no event, 1=event A, 2=event B, 3=event A and B, 4=death.  As always, with ordinal outcomes the integer scores are used only for convenience and do not reflect any equal spacing assumptions.
+
+##### Resources
+* [Details about efficiency of ordinal outcomes with various numbers of categories and relative category frequencies](https://www.fharrell.com/post/ordinal-info)
+* Teaching notes about [endpoint selection in clinical trials](https://hbiostat.org/bbr/overview.html#sec-overview-measurement)
+
+<a name="tprob"></a>
+
+## Some Disadvantages of Time-to-event Outcomes
+
+* when the "event" is a "good" outcome, there is no unique way to count bad outcomes and there may be problems with informative censoring; one must even use competing risk analysis to account for shorter follow-up time for late-entering patients
+* when there is a gap in data collection, and not just the usual right-censoring caused by loss to follow-up or late-entering patients, it is difficult to know how to analyze the data
+* when the event occurs in much less that 1/2 of the patients, the statistical power of time-to-event analysis starts to approach the (low) power of binary endpoints
+* time-to-event analysis does not account for patients moving in and out of outcome states
+* when the event is a compound event such as major cardiac event, the time until the first of these events ignores the severity of the event
+   * Example: if the event is time until myocardial infarction or death, death occurring after a nonfatal MI is completely ignored in time to first event analysis
+* when components of a compound event tend to happen at different times (e.g., ventilator use earlier and death later), this, while hidden to the researcher who only examines time until the first event, may create a violation of the proportional hazards assumption^[In the partial proportional odds model this can be fully accounted for.]
+* it is difficult to consider recurrent nonfatal endpoints when death is also of interest
+* when there are competing risks, the cumulative incidence function taking into account the competing risks is difficult to understand for clinical decision makers
+
+Regarding the last point, interpretation is simplest when instead of having competing risks one combines risks^[When combining risks into a comprehensive outcome scale in the special case where death is one of the categories, it is difficult to rank different causes of death and simplest to use all-cause mortality.].
+
+[Dodd et al](https://arxiv.org/abs/2006.10533) compare a number of COVID-19 outcome measures (but not longitudinal ordinal ones) and nicely summarize the measures that have been used in a number of studies.  They prefer the time to recovery outcome, but in their simulations an ordinal outcome measured only on day 14 had slightly better frequentist power than time to recovery.
+
+<a name="ttelong"></a>
+
+## Time to Event vs. Longitudinal Analysis
+
+The following table attempts to summarize pros and cons of two
+approaches to efficacy analysis.  For these comparisons assume that an
+outcome can be measured almost daily and that the daily outcomes are
+coded $Y=0, 1, ..., k$.  Assume that $Y=0$ indicates the most
+successful outcome and that the time to event analysis involves
+computing separately for each patient the number of days until $Y=0$
+is first achieved.  Assume that $Y=k$ denotes death, let $Y(t)$ denote
+a patient's ordinal outcome level at time $t$, and let $t_\mathrm{max}$ denote the maximum follow-up time.
+
+| Attribute | Time to Event | Longitudinal |
+|-----------|---------------|--------------|
+| Clinical interpretation | Is what clinicians are used to seeing, and they are generally better at interpreting time than interpreting probabilities (although they usually see hazard ratios) | Show time-response profiles by treatment then go to the trouble of displaying derived quantities such as $\Pr(Y(t_\mathrm{max}) > j)$ or mean number of days with $Y > 0$ (days not healed or dead; mean time to $Y=0$ if $Y=0$ is an absorbing state) or number with $Y \in [1, k-1]$ (alive but not healed) |
+| Time course of treatment effect | Limited | Provides complete trajectory and time $\times$ treatment interaction assessment |
+| Power     | Maximized when number of events is large; when events are in the minority the power approaches that of a simple univariate binary outcome | Maximized when $k$ or the number of time points per patient is large, or multiple levels of $Y$ have moderate-large frequencies
+| Sample size required | Generally larger since each patient counts as one observation | Generally smaller because effective sample size is greater than the number of patients when intra-patient correlation $< 1$ |
+| Accounting for death | Death interrupts measurement of low $Y$ and requires competing risk analysis that is difficult to interpret; not clear that death is given a sufficient penalty; placing death at the longest follow-up time instead of the day death actually occurs results in probabilities of hard-to-define events | Death is part of the outcome and is counted as the worst outcome. In deriving estimates it is explicitly treated as an absorbing state. State occupancy probabilities are not conditional on being alive. |
+| Incomplete information | Cannot deal with a time period for which it is only known that $Y$ is in $[a,b]$ with $b > a$ | Intervals for which it is known only that $Y$ is in $[a,b]$ can be handled using interval censoring |
+| Missing information | Assumes that $Y=0$ is impossible during a missed period; assumes independent censoring | Assumes missing at random |
+| Measurement error in $Y$ | Maintains power if error approaches zero as $Y \rightarrow 0$ | Will reduce power but not as low as dichotomizing $Y$ |
+
+
+## Attributes of Good Outcome Measures
+
+There are various desirable attributes of a primary outcome, such as
+
+* sensitivity to the patient's underlying clinical/biological state (which may include counting SAEs in some cases)
+* high information content and statistical power
+* giving proper weight to severe outcomes such as death
+* counting multiple occurrences of important events
+* capturing information needed to compute derived clinical parameters (see below)
+* clinically interpretable
+* provides a simple interpretation when some components are missing
+
+Regarding the ability to derive all important clinical parameters, take the example where the primary analysis uses a longitudinal model with measurements taken daily.  From the longitudinal model one can compute the probability distribution of the time until a criterion is satisfied.  For example, if renal function were measured daily, one can use the longitudinal model to estimate the median time until creatinine doubling or any other renal criterion is met.  One cannot do the reverse; given the time until doubling of serum creatinine one cannot assess the median creatinine over time, or the time until creatinine increases by a factor of 1.5.
+
+## Fundamental Elements of Outcome Assessments
+
+Components of outcome variables typically consist of
+
+* clinical events (death, stroke, pulmonary embolism, coma, etc.)
+* lab measurements
+* physiologic measures/organ system dysfunction
+* need for rescue therapy or invasive therapy that is resource-intensive or carries risk (e.g., invasive ventilation)
+* patient-reported outcome scales (e.g., functional status or quality of life)
+
+Less often included are serious adverse events (SAEs) that are not initially considered to be direct efficacy parameters.  The majority of RCTs initially maintain separation between efficacy and safety, and at a later stage attempt to assimilate the two to informally (and often all too arbitrarily) assess risk-benefit trade-offs.  When an SAE is so severe that it requires termination of the randomized therapy, the statistical analysis becomes very complex.  This has spawned major efforts under the heading of "estimands" where complex statistical methods for handling non-random missing data are incorporated, and clinical researchers are having difficulties interpreting the results.  It is often better to think of the outcomes as what matters to the patient, and to penalize a treatment for resulting in SAEs.  By including SAEs as a formal part of the efficacy outcome measure, one can obtain a much more easily interpreted result and build in a risk-benefit trade-off.  This will be discussed further under ordinal longitudinal outcomes below.
+
+The above reflects our general experience in designing clinical trials in many medical areas.  It is difficult to interpret an efficacy analysis when the efficacy outcome can be interrupted.  The only simple interpretation comes from counting the interruption as an outcome^[In an ordinal outcome scale, an interruption that masks the ultimate efficacy outcome is generally counted as an intermediate-level outcome.].
+
+<a name="win"></a>
+
+There are many published methods for analyzing multiple clinical trial outcomes.  One of the most popular approaches is the WIN ratio of @poc12win (which is described in an excellent recent article  by @fol20ana).  The WIN ratio is essentially a Wilcoxon two-sample comparison for time until a major event for all possible pairs of patients, with a tie-breaker based on a continuous or ordinal secondary measurement when the patient pair's event times could not be ordered (i.e., when one patient was censored before the second one had an event).  But the WIN ratio cannot be readily clinically interpreted in terms of treatment benefit to an individual patient. [DOOR---desirability of outcome ranking---has [similar problems](https://notstatschat.rbind.io/2024/01/25/ordinal-outcomes-the-loct-door)]{.aside}
+
+::: {.callout-note collapse="true"}
+## Disadvantages of the WIN Ratio 
+
+* The WIN ratio reduces to the Gehan-Wilcoxon test for comparing event time distributions when there are no tiebreaker events.  This test is generally not as desireable as the Cox proportional hazards model comparison.  Longitudinal ordinal state transition models [reduce to the Cox model](https://hbiostat.org/talks/ordmarkov3.html).
+* The WIN ratio does not properly handle censoring times, so the result is dependent on the censoring time distribution (a longstanding problem with the Gehan-Wilcoxon statistic).
+* The WIN ratio is [claimed](https://doi.org/10.1093/eurheartj/ehae647) to handle repeated outcomes such as recurrent hospitalizations or repeatedly assessed functional status.  But this claim is a bit misleading because WIN requires reducing the repeated assessment to a single number, and assumes that each pair of patients has the same follow-up duration.  For example, WIN would handle recurrent hospitalizations by counting the number of hospitalizations and using that as a tiebreaker.  But if one patient had 3 hospitalizations during 6 months of follow-up and another had 2 hospitalizations in 2 years of follow-up, those patients are not comparable.  Use of hospitalization status in a given day in a longitudinal analysis circumvents this problem.
+* The WIN ratio is not concordant with how raw data are collected; raw data usually consist of repeated patient status assessments, not time to events.
+* Calculations are based on all possible pairs of patients, so per-patient treatment benefit cannot be quantified and one cannot translate WIN ratios to the time scale.  Contrast that with longitudinal ordinal analysis using state transition models where one can estimate the difference in expected days well between treatment groups as well as estimating treatment-specific absolute risk reductions for being in certain outcome states at certain times.
+* Missing outcome components are not allowed.
+* Partial information at some time periods is not allowed.  For example if 5-level patient status is assessed monthly and for one month we know the patient is alive (Y < 4) but do not know her functional status (Y = 1-3), an ordinal longitudinal analysis would consider the response to be left censored at Y < 4.  Interval censoring for ordinal models is also easy to implement, to handle cases such as when you know Y is 2 or 3 but do not know which.
+* WIN ratios do not extend to a Bayesian framework, unlike regression models, so WIN does not allow incorporation of information from outside the current data.
+* WIN ratios do not allow for covariate adjustment, thus losing power.
+* WIN ratios do not facilitate analysis of differential treatment effects (interactions between treatment and covariates).
+* Unlike partial proportional odds ordinal Markov longitudinal models (PPOM), WIN ratios do not allow treatment effects to be unlinked across levels of the outcome hierarchy.  A PPOM can specify that the effect of a treatment on death is different from the effect on quality of life, for example.
+* Unlike PPOMs, WIN ratios do not provide direct evidence for similarity of treatment effects for different outcome levels (see [here](https://fharrell.com/post/yborrow)).
+
+See other issues decribed in [WIN ratio: A seductive but potentially misleading method for evaluating evidence from clinical trials](https://doi.org/10.1161/CIRCULATIONAHA.123.067786) by J Butler and N Stockbridge.
+
+The WIN difference is [claimed](https://doi.org/10.1093/eurheartj/ehae647) to complement the WIN ratio or odds by providing a measure of absolute and not just relative treatment effect.  But this is clearly not the case.  When there are no tiebreaking outcomes, the WIN difference reduces to the difference between the concordance probability and the discordance probability.  This is essentially the Wilcoxon statistic or Somers' $D$ or Goodman-Kruskal $\gamma$ rank correlation coefficient between treatment and outcome. In the case of time to a single event it is the Gehan-Wilcoxon test.  These are all relative treatment effect measures, unlike estimands such as the difference in cumulative event incidence or the difference in expected number of days in a bad state (which can be estimated by a PPOM).
+
+:::
+
+The outcome measure should use the underlying raw data to the extent possible.  It is well known, for example, that dichotomization of continuous response variables results in major power loss and in some cases can require a 5-fold increase in required sample size.   When outcomes are multi-factorial, small trade-offs in the name of interpretability may be in order.  For example, a 20-level ordinal outcome scale may be assessed daily, and may be used to record the worst outcome occurring on that day.  If multiple outcomes occurred on the same day, scoring the patient according the the worst observed outcome will result in a small information loss associated with the less severe outcomes.
+
+##### Resources
+
+* Collection of papers related to [multiple outcomes in clinical trials](http://hbiostat.org/papers/RCTs/multEndpoints)
+* [Inflation in sample size caused by dichotomizing outcome measures](https://hbiostat.org/doc/bbr.pdf) (Section 18.3.4)
+
+## Longitudinal Ordinal Responses
+
+For sake of discussion the data collection frequency is assumed to be daily while a patient is hospitalized.
+A longitudinal ordinal outcome measure, except for a small information
+loss when multiple outcomes occur in the same patient on the same day
+(which is more than compensated by power gains from not considering
+all outcomes as equally severe and by considering multiple times), is a fundamental quantification of the patient's entire trajectory.  This approach even allows one to incorporate continuous measures.  For example in a renal injury study one may have 200 levels of serum creatinine followed by a category for dialysis and a final category for death.  Such an outcome variable would provide the full power of a continuous outcome but would include proper placeholders for clinical events.  It would allow one to answer questions such as "for treatment A what is the probability that a patient will have creatinine exceeding 2.0 or worse on day 10?", where "or worse" signifies a creatinine higher than 2.0, dialysis, or death.  The two clinical events override creatinine and are not "swept under the rug" in any sense.  With an ordinal statistical analysis the actual numeric values assigned to dialysis or death are irrelevant, as only the ordering matters.
+
+More typically, clinical studies utilize a 4-20 level ordinal scale.
+The most commonly used statistical model for such outcomes is the
+proportional odds ordinal logistic regression model of @wal67^[This model was rediscovered by McCullough and Nelder in 1980.].  From a
+longitudinal ordinal model one can estimate many needed derived
+parameters such as the expected time in a clinical state (in ordinal
+categories 3-6, say) and expected time until a given state or worse.
+More information about statistical models is given later.
+
+## Example Comprehensive Ordinal Outcome Scale
+
+Consider an extension of the WHO ordinal outcome scale that incorporates SAEs such as pulmonary embolism and stroke.  Such a scale counts the most serious SAEs against the treatment group to which the patient has been assigned, and counts death as the worst outcome so that it carries a heavier penalty.  The following example scale would need to be adjusted by clinical experts to reflect their consensus judgment about the rankings.
+
+| Value | Meaning |
+|--|---------|
+| 0 | uninfected |
+| 1 | viral RNA detected, asymptomatic |
+| 2 | symptomatic independent |
+| 3 | symptomatic, assistance needed |
+| 4 | symptomatic DVT |
+| 5 | hospitalized, no O$_2$ therapy |
+| 6 | hospitalized, O$_2$ by mask or nasal prongs |
+| 7 | hospitalized, O$_2$ by NIV or high flow |
+| 8 | intubation & mechanical ventilation, pO$_2$/FIO$_2$ $\geq$ 150 or SpO$_2$/FiO$_2$ $\geq$  200 |
+| 9 | mechanical ventilation pO$_2$/FiO$_2$ < 150 (SpO$_2$/FiO$_2$ < 200) or vasopressors |
+| 10 | mechanical ventilation pO$_2$/FiO$_2$ < 150 and vasopressors, or ECMO |
+| 11 | major bleeding (defined by ISTH) |
+| 12 | myocardial infarction |
+| 13 | pulmonary embolism |
+| 14 | renal replacement therapy |
+| 15 | stroke |
+| 16 | death |
+
+<a name="cos"></a>
+
+## Another Ordinal Outcome Scale Example
+
+In an important pair of online-first papers appearing on 2020-08-14 and 2020-08-17, the COVID-19-Core Outcomes Set Project reported on an international online survey of 776 people with confirmed or suspected COVID-19 and their families, 3631 members of the general public, and 4882 health professionals.  The goal of the project is to create a core outcome set that spans hospitalized and non-hospitalized patients.  A key finding of the survey is that patients put great emphasis on shortness of breath (SOB) as an outcome to avoid.  The papers are [here](https://journals.lww.com/ccmjournal/Abstract/9000/International_Survey_to_Establish_Prioritized.95532.aspx) and [here](https://journals.lww.com/ccmjournal/Abstract/9000/Core_Outcomes_Set_for_Trials_in_People_With.95535.aspx).  The papers do not provide an overall ordinal scale but do provide data that are useful for constructing such a scale.  One attempt to specify a scale that is consistent with some of the project's findings is below.  This is motivated primarily by patient/family importance rankings from Figure 3 of the first paper.
+
+| Value | Meaning |
+|-------|---------|
+| 0  | return to normal activities, no SOB |
+| 1  | return to normal activities with some SOB |
+| 2  | not able to return to all normal activities |
+| 3  | hospital acquired infection |
+| 4  | chest pain |
+| 5  | hospitalization |
+| 6  | cardiac damage |
+| 7  | low SaO<sub>2</sub> |
+| 8  | SOB |
+| 9  | lung scarring |
+| 10 | pneumonia |
+| 11 | sepsis |
+| 12 | severe lung dysfunction |
+| 13 | organ failure |
+| 14 | respiratory failure |
+| 15 | multiple organ failure |
+| 16 | death |
+
+## Relationship to Time-to-Event
+
+To better understand longitudinal ordinal outcomes, consider a special case where the ordinal scale has only two levels: alive and dead.  Death is an _absorbing state_.  This binary outcome can be analyzed as a longitudinal ordinal outcome that happens to be a longitudinal binary outcome.  When time is broken up into discrete intervals, typically daily or weekly, and one has a 0/1 outcome Y for each interval, the following example configurations will be observed:
+
+| Outcome | Y for One Patient | 
+|-----------------|-------------------|
+| Death on day 1  | 1 |
+| Death on day 2  | 0 1 |
+| Death on day 7  | 0 0 0 0 0 0 1 |
+| Loss to follow-up on day 5 | 0 0 0 0 0 |
+
+There is one record per day per patient, with records terminated on the day of death or last follow-up alive.  These longitudinal binary outcomes can be fitted by logistic regression using any of several binary logistic regression methods including
+
+* a regular binary logistic model with multiple records per patient that assumes conditional independence of records; this is readily extended to Markov models by added lagged outcomes as covariates
+* generalized estimating equations using a working independence model using the cluster sandwich covariance estimator to get the correct standard error of $\hat{\beta}$
+* mixed effects model
+* mixed effects Bayesian model
+* a marginal ^[These models are marginal only in the sense of not having patient-specific parameters.  Random effects models, given a sufficient number of observations per patient, allow estimation of tendencies on individual patients.  Marginal models are focused on comparisons of groups of like patients (_like_ because of covariate adjustment)] model that doesn't use random effects but models serial correlation
+
+When the time intervals are fine enough, and interval risks are small,
+the **odds ratio** from one of these logistic models equals the
+**hazard ratio** from the regular Cox model^[The odds ratio from the repeated logistic model is exactly the ratio of discrete hazard functions after each hazard$\lambda$ is transformed to $\frac{\lambda}{1 + \lambda}$ (@efr88).], and the $z$ test
+statistic from the logistic model almost exactly equals the ordinary
+$z$ statistic from the Cox proportional hazards model.  See
+[here](https://hbiostat.org/stat/binarySurv.html) for simulations
+comparing strung-out logistic regression analysis to Cox model
+analysis.  The strung-out binary logistic model estimates the discrete
+hazard function, i.e., the probability of having an event at time $t$
+given the patient was event-free before $t$.  The unconditional
+event-free probability is the product of one minus these discrete
+hazards, which is the Kaplan-Meier estimator if there are no
+covariates and the model is saturated with respect to time (@efr88).  This is a special case of a Markov transition 
+model with two states, where the "event" state can only occur once and
+is an absorbing state such as death.  When one computes all the
+products of appropriate terms containing conditional probabilities
+from the Markov chain, the resulting unconditional probability is
+again the Kaplan-Meier estimator when there are no covariates and
+time is modeled as categorical so that the model is saturated.  When time is modeled as a flexible nonlinear function, such as a restricted cubic spline function, the estimates are smoothed over time.
+
+<a name="yphil"></a>
+
+## Statistical Parameters vs. Reporting of Results
+
+The lowest information/lowest power outcome is a binary outcome not involving time.  The next lowest is time to a binary event.  A clinical trial outcome needs to mimic a continuous measure such as blood pressure in order to achieve adequate power when an abundance of patients is not available in the needed time frame.  The use of an ordinal or continuous outcome can still result in the estimation of simpler quantities for reporting and clinical interpretation.
+
+Some general logic in selecting, constructing, and reporting outcomes are as follows.
+
+* Except in mechanistic studies, the outcome measure needs to reflect what matters to public health and patients, and often needs to count several components that matter.
+* The statistical measure used to model the outcome need not be the parameter used to communicate the results of the analysis to stakeholders.
+* As an example of the last point, in chronic disease one may be most interested in comparing the cumulative incidence of a serious outcome such as death at 5 years between treatments A and B.  But it is not a good statistical procedure to dichotomize individual patient survival at 5 years and then analyze this as a binary outcome^[Besides a loss of power, doing a binary analysis of continuous time to event would not be able to handle loss to follow-up before 5y.  In a similar way, longitudinal ordinal models can accommodate censoring including censoring within one measurement time when part of the ordinal scale is not assessed in an interval.].  Instead, a time-to-event model is used, which is much more powerful than, say, a binary logistic model.
+* In a time-to-event study, the treatment effect may be parameterized as a hazard ratio.  The estimated hazard ratio can be used to efficiently estimate the cumulative incidence of the outcome at 5 years, and the hazard ratio is the basis for quantifying statistical evidence for a treatment effect.  If one has doubts about the adequacy of the proportional hazards (PH) assumption, a time-dependent covariate can be added to the model^[A Bayesian approach would put a skeptical prior on the degree of non-proportional hazards, i.e., the time $\times$ treatment interaction term, that would favor PH for small samples but allow for non-PH for larger samples.].  The treatment main effect and the time $\times$ treatment interaction effect would be used jointly to estimate cumulative incidence at 5y.
+* When patients are assessed repeatedly, the raw data contain a great deal of information, informs us of possible changing treatment effect over time, and recognizes that  recovery may only be temporary in some patients, i.e., serial ordinal data better handles up and down fluctuations of patient status.
+* When a simpler clinical measure such as time to recovery is used to summarize daily disease severities, this measure discards valuable information, loses statistical power, and has difficulties properly handling censoring.  Instead of computing time to recovery from the patient raw data, one would estimate recovery probabilities as function of time and treatment once the longitudinal ordinal model is fitted.  One can describe this process as counting "close calls."
+* From an ordinal longitudinal analysis one maximizes power by choosing a model that is likely to fit the data and that has the fewest number of parameters involving treatment.  A longitudinal proportional odds model may have as few as one parameter (a log odds ratio) for treatment, or two parameters if one doubts that the treatment would have an instant effect the day after randomization and instead believes that the treatment benefit unfolds over time.
+* The Bayesian paradigm offers a unique opportunity^[The bootstrap can be used to compute approximate standard errors and frequentist confidence intervals for derived parameters.  When the derivation is simple (unlike the case where transition models are translated into state occupancy probabilities through recursive matrix multiplication), the *delta method* can be used to compute approximate standard errors and confidence limits for derived parameters.] of providing evidence measures on derived parameters.  This is especially attractive with Markov models, which are stated in terms of transition probabilities.  These transition probabilities may be translated (unconditionalized; marginalized) with matrix multiplication to state occupancy probabilities.  We may easily compute posterior probabilities on these probabilities using the thousands of already-sampled posterior values of the fundamental model parameters.  For example, evidence for efficacy might be taken as a high posterior probability that the probability of being at home on day 14 is higher for treatment B than for treatment A.
+* In a longitudinal proportional odds model the odds ratio can be efficacy measure (and is still very useful even when proportional odds is seriously violated as discussed elsewhere) but it can also be thought of as a means to an end, the end being highly clinically interpretable probability that a patient will achieve a certain level of outcome at a specific time and for a specific treatment.  Differences in these probabilities are also easy to analyze.
+* Example: For a 14-day study with a 4-level outcome (home, in hospital, on ventilator, death), a longitudinal ordinal model would efficiently use 14 days of patient status to estimate for each treatment the probabilities that (1) the patient is at home on day 14, (2) the patient died by day 14, and (3) the patient is still in the hospital on a ventilator on day 14.  Bayesian posterior probabilities that any of these probabilties are better for treatment B than for A can readily be computed from the joint posterior distribution of the ordinal model parameters.  When 4000 posterior samples are taken, one computes the derived event probabilities 4000 times and constructs the posterior distribution from these posterior samples of compound parameters.  The posterior probability of efficacy, to within simulation error (which can be reduced by taking more than 4000 posterior samples) is the fraction of posterior samples for which a probability difference is in the right direction.
+
+# Analysis
+
+Models discussed here, for example the proportional odds model, partial proportional odds model, and longitudinal versions of them, may be fitted with either frequentist or Bayesian approaches.  Even ignoring design considerations such as sequential or adaptive designs, there are advantages of the Bayesian approach.
+
+* Instead of relying on normal approximations, calculations in the Bayesian setting are exact (to within simulation error, which is under your control)
+* Bayes can use external information including just being skeptical, which makes highly sequential trials work better
+* With Bayes you can borrow information across parameters.  For example if you think a treatment may affect events more than it affects a functional scale, you can use a partial proportional odds model and borrow information about the effect on the scale towards the effect on clinical events (scale overrides).  A prior specifies how much borrowing to use for the differential effect of treatment (across outcome levels).  Suppose that one wishes to allow for a different treatment effect on mortality than on nonfatal outcomes.  In a frequentist partial proportional odds model, the mortality odds ratio is estimated separately from the rest of the treatment effect, requiring a very large sample size due to the lack of borrowing of information.  With a Bayesian partial PO model one may specify a prior on the differential (over outcome types) treatment effect so that we "halfway believe" there is similarity of the two effects.  If one is willing to give a bit of credit towards mortality reduction when a treatment reduces symptoms or need for a ventilator, the evidence for a mortality effect will be bolstered.  As the sample size increases, the prior wears off and the mortality effect is customized.  Detailed examples are [here](https://fharrell.com/post/yborrow).
+* When you have a derived parameter that is a combination of various model parameters (e.g., expected time in state y or higher) you get exact Bayesian inference no matter how complex the derivation is.  With frequentism you'd need to use the delta method to try to get a confidence interval, and it is likely to not be very accurate.
+
+## Bayesian
+
+Our proposed Bayesian strategy for COVID-19 sequential trial design and Bayesian statistical analysis are detailed in [hbiostat.org/proj/covid19](https://hbiostat.org/proj/covid19).  As described there, we propose to specify prior distributions for effect measures such as odds ratios by assuming the effect on the additive scale (e.g., log odds) has a pre-data normal distribution with mean zero, and variance computed so that the probability of a large effect, which equals the probability of an equally large harm, is small, for example 0.05.  For an odds ratio we take "large" to mean for example OR=2.0.  Such a prior distribution is symmetric on the log OR scale and assigns equal chances for benefit and harm.  This reflects the expectation that there will be no instant cure for COVID-19 (OR=0.0) but rather there will be many incremental therapies.  The detailed document also discusses assessment of similarity and non-inferiority and provides several simulations to understand Bayesian operating characteristics.
+
+We have developed software specifically for ordinal response data as relevant to COVID-19.  This development was done for and used by the ORCHID trial of Hydroxychloroquine.  Bayesian calculations are done using [Stan](http://mc-stan.org) (@rstan) and the [R](http://r-project.org) (@R) [rstan](https://cran.r-project.org/web/packages/rstan) package.  The new software is in R package `rmsb` which was accepted to the R repository CRAN on 2020-08-05.
+
+##### Resources
+
+* [Choosing priors](https://hbiostat.org/doc/bayes/course.html#resources)
+* [More on choosing priors](https://hbiostat.org/proj/covid19/bayesplan.html#prior)
+* Extensive examples and R code for the [rmsb package](https://hbiostat.org/R/rmsb/blrm.html)
+
+<a name="po"></a>
+
+## Univariate Ordinal Outcome
+
+The proportional odds (PO) ordinal logistic model, a member of the class of cumulative probability ordinal response regression models, was developed by @wal67 for precisely situations such as ours.  The PO model has the following features:
+
+* it make no assumption about spacings between categories
+* statistical inference is unaffected by transforming the response variable Y, under any monotonic transformation (log, square root, etc.); though Y is typically coded as numeric values, these numbers are not used in parameter estimation and may have just as well been replaced by ordered letters of the alphabet
+* if Y is continuous and normally distributed the PO model is about 0.95 as efficient as a normal parametric model (@liu17mod)
+* if there is only one covariate and it is binary, the test for group differences from the PO model is equivalent to the Wilcoxon-Mann-Whitney two-sample rank-sum test (@mcc80reg)
+* the PO model is exactly the binary logistic model when there are only two levels of Y
+* the model accommodates arbitrarily many ties in Y, bimodal distributions, and floor and ceiling effects
+* the model can be extended to handle non-PO
+* even when the PO assumption is violated, the PO model is more often than not better than alternatives
+
+On the last point, a common misunderstanding is that the PO model should be abandoned when PO is violated.  Not only does this fail to recognize that the model can easily be extended to relax the PO assumption (see below), but the most commonly used alternative violates assumptions in a much more serious way.   This is referring to dichotomization of the outcome and using a simpler binary logistic model.  This assumes that all outcome levels within each of the two outcome bins have equal impact on the patient, which is almost never the case.  Such masked outcome heterogeneity results in serious power loss / sample size inflation not to mention interpretation difficulties.
+
+Not only is the score test from the proportional odds model identical to the Wilcoxon test in the no-covariate case, but the regression coefficient from the PO model is a [simple 1-1 transformation](https://fharrell.com/post/po) of the Wilcoxon-Mann-Whitney concordance probability.  This concordance probability, also called the _probability index_, is the probability that a randomly chosen patient on treatment B has a response Y that is higher than the response from a randomly chosen patient on treatment A.  The conversion formula, which has an average absolute error of 0.002 on the estimated probability, is $\frac{\text{OR}^{0.66}}{1 + \text{OR}^{0.66}}$ where OR is the maximum likelihood estimate of the B:A odds ratio (posterior mode in the Bayesian setting).  This formula is accurate even when the PO assumption is markedly violated.  This has an important ramification: the treatment effect parameter in the PO model provides a valid quantification of the global treatment effect regardless of the validity of the PO assumption^[Where the PO assumption does matter is in the estimation of $\Pr(Y \geq y)$.  Estimates of such probabilities will be off for certain $y$ if PO is strongly violated.].
+
+Concerning the assessment of the PO assumption, it is important not to use the @pet90par score test of the PO assumption as implemented in SAS, as this test is anti-conservative, i.e., will reject H$_0$ far too often.
+
+The following syntax using the R `rmsb` package `blrm` function to compute the posterior probability of any efficacy and the probability of nontrivial efficacy (OR < 0.95) using default priors.  Age and baseline SOFA score are adjusted for using a restricted cubic spline function with 4 knots.  Actual priors can be inserted as arguments to `blrm`.
+
+```
+f <- blrm(y ~ tx + rcs(age, 4) + rcs(sofa, 4))
+P <- PostF(f)      # derives function P to compute post. probs.
+P(exp(b1) < 1)     # any efficacy (fraction of posterior draws with OR < 1)
+P(exp(b1) < 0.95)  # nontrivial efficacy
+
+```
+
+The PO model has been extended in various ways.  Two of the most popular extensions are due to @pet90par:
+
+* the partial PO model allows Y to be treated as categorical with respect to a subset of the covariates, making that part of the model behave as a multinomial (polytomous) logistic model, i.e., no PO assumption is made with respect to that covariate subset
+* the constrained partial PO model is like the first but constrains the departure from PO in a way that is akin to adding an interaction between treatment and log time (as a time-dependent covariate) in the Cox model to relax the proportional hazards assumption
+
+The second model is of particular interest for COVID-19 ordinal outcomes in which the worst outcome is death.  It is always the case that clinical investigators are interested in checking whether a treatment affects mortality differently than it affects nonfatal outcomes.   This is a simple task with the constrained partial PO model.  For example here is the code used with the R `rmsb` package:
+
+```
+f <- blrm(y ~ tx + age + sofa, ~ tx,
+          cppo = function(y) y == 'death')
+```
+
+The constrained partial PO component is specified by the second formula (which specifies that the PO assumption is relaxed for treatment) and the `cppo` function.  The above syntax will result in estimation of a special odds ratio for the treatment effect on death and will provide the posterior probability that the treatment affects death differently than it affects the less severe outcome levels.
+
+<a name="longord"></a>
+
+## Longitudinal Ordinal Outcome
+
+A longitudinal ordinal model captures more information and so has greater Bayesian and frequentist power.  A longitudinal model also allows one to estimate the time course of the treatment effect (if time $\times$ treatment interaction is included in the model) and to elegantly incorporate partial information (e.g., some outcome scale elements not being collected in certain time intervals).
+
+Longitudinal ordinal outcomes generalize of many other outcomes, such as
+
+* continuous response variables (interval-scaled variables are also ordinal)
+* longitudinal binary outcomes and recurrent events
+* time to event when the event can be derived from the longitudinal measures
+
+By virtue of their capturing a large amount of statistical information about patient outcomes and trajectories of those outcomes, we recommend the use of longitudinal ordinal outcomes as primary RCT outcomes in COVID-19 therapy studies.
+
+The `blrm` R function implements Bayesian random effects longitudinal
+proportional odds and partial PO models (including constrained ones).
+Within-patient correlations are modeled using random effects by adding
+`cluster(patientID)` to the first model formula.  Within the confines of a missing at random assumption (a daily or weekly record's 
+missingness is completely random except for the influence of already
+available data---the baseline covariates and responses at previous
+time points), the model can make maximal use of available information
+and does not require imputation for missing time points.
+
+`blrm` also fits Markov models with or without random effects, as
+these models can be fitted with any logistic regression software after
+one creates a record for each time interval.  Without random effects such models assume conditional (on earlier measurements and baseline covariates) independence of measurements, which is quite reasonable.   The model just needs to
+condition on the ordinal outcome in the previous time interval (if
+using a first order Markov model, otherwise more distant previous outcomes
+must be conditioned upon).  The Markov model handles serial dependence,
+so is more likely to reflect the true correlation pattern within
+patient than the compound symmetry correlation pattern induced by
+random effects.  In other words, the Markov model will allow for the
+correlation between two points within patient to be lower as the gap
+between the two measurements increases.  It also allows for the correlation to be arbitrarily high, e.g., when patients are quite stable over some time intervals.
+
+The `blrm` function, because of the flexibility of its underlying `Stan` code, implements left, right, and interval censoring.  This opens up a number of possibilities for handling partial information without the use of imputation, complex joint modeling, or complex estimands.  As an example, suppose that the following ordinal scale was used (QOL = quality of life):
+
+| Y Code:  | 0 | 1 | 2 | 3  | 4 | 5 | 6 | 7 |
+|---------|---|---|---|---|---|---|---|---|
+| Meaning: | no virus | virus present, excellent QOL | very good QOL | good QOL | fair QOL | poor QOL | stroke | dead |
+
+Suppose that on certain days QOL was not intended to be assessed.  On such days, when stroke or death occurs the response is 6 or 7, and if no virus is present the response is set to 0 when no event occurred.  If on a given day the outcome is known not to be 0, 6, or 7 it is interval censored in [1-5] and is analyzed as such.  This reflects exactly what is known and what is unknown and makes optimal use of daily information^[The overall shape of the time-response curve is handled by including a flexible continuous function of time in the model (e.g., restricted cubic spline function) as a fixed effect.  This allows for some smoothing and borrowing of information across time and allows the interval censoring approach to work, as opposed to modeling time as categorical using indicator variables, which would confound censoring and time.].
+
+### Covariate Adjustment
+
+No matter what the outcome variable or the experimental design, it is important to adjust for baseline covariates, in a fully pre-specified fashion.  The covariates for adjustment are those that explain a large chunk of outcome heterogeneity.  In COVID-19, highly prognostic variables such as age and organ function (e.g., SOFA score) are key candidates.  Adjustment for prognostic variables significantly increases power at no extra cost, and has nothing to do with baseline balance.   This is a key point of confusion in RCT design, with some investigators falsely believing that with perfect balance one needn't adjust for covariates.  This and the power gain from adjusting are explained in detail [here](https://hbiostat.org/bbr/ancova.html) which also includes key references.
+
+##### Resources
+
+* Markov ordinal longitudinal model [tutorial](https://onlinelibrary.wiley.com/doi/10.1002/sim.10133)
+* [Comprehensive Markov proportional odds longitudinal analysis](https://hbiostat.org/proj/covid19/orchid.html) of ORCHID COVID-19 clinical trial
+* [Comprehensive random effects and Markov proportional odds longitudinal analysis](https://hbiostat.org/proj/covid19/violet2.html) of VIOLET 2 vitamin D clinical trial in critically ill patients
+* [Markov modeling of binary outcomes assessed at irregular times](https://hbiostat.org/stat/irreg.html)
+* [Longitudinal binary logistic model vs. Cox model](https://hbiostat.org/stat/binarySurv.html)
+
+### Reporting of Results
+
+#### Studies With a Single Outcome Assessment Time
+
+Unlike the traditional frequentist approach in which one attempts to garner evidence against the null hypothesis, Bayesian posterior inference provides evidence for all possible levels of efficacy.  Such information can be presented in two ways: the posterior density function (x=magnitude of efficacy such as OR, y=degree of belief in that magnitude) or a cumulative posterior distribution (x=magnitude of efficacy, y=cumulative probability that the true efficacy is that magnitude or greater).  Particular probabilities of OR intervals can also be computed, along with two-sided 0.95 Bayesian highest posterior density intervals and posterior mean, median, and mode of the unknown effect.  In addition to evidence about the primary efficacy OR parameter, posterior distributions for all outcome probabilities and differences in outcome probabilities (when baseline covariates are set to particular values $x$ such as their means) will be given.  The latter represent absolute risk differences for $P(Y \geq y | \,X=x,\,\text{data})$, where $j = 2, \ldots, 7$ for a 7-level outcome (here the scale is ordered from worst to best outcome with death=1).  For example when $y=6$ these may be probabilities of being alive at home.  The following table of posterior mean risks from the proportional odds model will be constructed:
+
+| **Outcome** | **Probability<br>Drug** | **Probability<br>Control** |
+|:------------|:---:|:---:|
+| Alive | | |
+| Alive without ECMO | | |
+| Alive without high flow $O_2$ | |
+| Alive without supplemental $O_2$ | |
+| At home | |
+| At home, resume normal activities | |
+
+#### Longitudinal Studies
+
+In the Bayesian mixed effects model, time would be handled as a flexible fixed effect.  For example, the overall time-response profile (time main effect) could be modeled as quadratic in days since randomization.  Depending on what is known about treatment response, the primary analysis may exclude a treatment $\times$ time interaction.  In that case, the treatment effect is represented by a single overall OR so that power is concentrated^[When the proportional odds assumption is relaxed for the treatment effect through the use of a partial PO model, there will be more than one parameter for treatment even when no treatment $\times$ time interaction is included.  When the prior distribution for the departure from PO is very skeptical, the effective number of degrees of freedom for treatment in this case will be just above 1.0.].
+
+To quantify evidence for changing treatment effect over time (and to estimate a possible delay time until treatment effect) one can include treatment $\times$ time interaction in the model and compute posterior probabilities of efficacy as a function of days since randomization.  Point estimates of treatment effects may be depicted in a line graph with x=day, y=posterior median odds ratio.
+
+Because of the number of choices, longitudinal models require one to prioritize the various contrasts that can be made.  Here are some choices with the degrees of freedom for each, assuming time is modeled quadratically.  Below Tx stands for treatment, C for control, $t$ is time, and $t_{max}$ is the last time of follow-up.
+
+| **Estimand** | **d.f.** | **Question Addressed** |
+|:------------|---|:---|
+| Tx + Tx$\times t$ interaction| 3 | Does Tx have an effect at any time |
+| Tx - C at $t=t_{max}$ | 1 | Does Tx have an effect at time $t_{max}$ |
+| Tx - C averaged over $t=0 \rightarrow t_{max}$ | 1 | Does Tx have an effect on the average |
+
+Note that omitting the Tx $\times t$ interaction from the model entirely is similar to the last contrast.
+
+### Markov Models
+
+Consider a first-order Markov process in which the distribution of the outcome Y for a given time period depends only on the outcome in the previous time period, plus baseline covariates.  This model allows one to flexibly model autocorrelation by including the previous state as an updated covariate, and possibly interacting the previous state with a flexible function of absolute time, or gap from the previous measurement time.  In analyses of ORCHID and VIOLET 2 (see _Resources_ above) these interactions were important, especially the interaction between previous state and time gap (e.g., the importance of previous state wears off over time).  The most important non-proportional odds effect to include in a partial proportional odds model was found to be time since randomization.  For example the mix of outcome components may change over time (e.g., oxygen supplementation early, invasive ventilator in the middle, death late).[See Chapter 14 of [RMS](https://hbiostat.org/doc/rms.pdf) for a detailed frequentist analysis tutorial with R code, and [here](https://hbiostat.org/proj/covid19) for multiple Bayesian case studies.  A complete tutorial is [here](https://onlinelibrary.wiley.com/doi/10.1002/sim.10133)
+.]{.aside}
+
+Letting measurement times be $t_{1}, t_{2}, \dots, t_{m}$,  and the measurement for a patient at time $t$ be denoted $Y(t)$, the first-order Markov model is stated as
+
+$$\Pr(Y(t_{i}) \geq y | X, Y(t_{i-1})) = \mathrm{expit}(\alpha_{y} + X\beta + g(Y(t_{i-1}), t_{i}, t_{i} - t_{i-1}))$$
+
+The function $g$ involves any number of regression coefficients for a main effect of $t$, the main effect of time gap $t_{i} - t_{i-1}$ if this is not collinear with absolute time, a main effect of the previous state, and interactions between these.  Here are some examples of how the previous state may be modeled in $g$:
+
+* linear in numeric codes for $Y$
+* a single binary indicator for a specific state such as the lowest or highest one
+* a discontinuous bi-linear relationship where there is a slope for in-hospital outcome severity, a separate slope for outpatient outcome severity, and an intercept jump at the transition from inpatient to outpatient (or _vice versa_).
+
+One can see that the Markov model is quite flexible in handling time trends and serial correlation patterns.
+
+The model can allow for irregular measurement times as exemplified [here](https://hbiostat.org/stat/irreg.html).  This is done by including a flexible function of the time since the previous measurement, and interacting this with the previous state.  This will discount the influence of a previous state, if needed, when the state was assessed long ago.  The most important effects to include in the model are typically
+
+* previous state
+* a flexible function of time $t$ since randomization
+* a flexible function of gap times (if gap times and absolute time are virtually collinear, one of these may be omitted)
+* interaction between previous state and gap time if gaps are very non-constant
+
+Bayesian methods have special advantages for Markov models.  The unconditioning process needed to estimate cumulative incidence functions and state occupancy functions creates complex derived parameters for which it is very difficult to derive frequentist confidence intervals.  On the other hand, Bayesian uncertainty intervals (credible intervals or highest posterior density intervals) are derived quite simply.  If one has, say, 4,000 posterior samples of parameters in the transition model, one computes the complex derived parameters 4,000 times and uses proportions, quantiles, and highest posterior density estimates to compute any needed quantity exactly (to within simulation error, i.e., a sample size of 4,000).
+
+**Technical note**: If the time gaps tend to be greater than one time unit, and it is not the case that a large number of patients have one time-unit gaps, it is not possible to estimate transition probabilities, state occupancy probabilities, or cumulative incidences with one time unit increments without untestable model assumptions.  Without strong assumptions, transition probability estimates cannot be made for time schedules not occurring in the data.  For example, if patients are assessed on weeks 2, 4, 6, 8 it is not possible to estimate either transition or unconditional probabilities at weeks 1, 3, 5, 7 without assuming some simple interpolation model.  This will seldom be a problem because we would normally be content with displaying results at weeks 2, 4, 6, 8.
+
+#### Mortality Assessment
+
+As detailed earlier, the Bayesian partial proportional odds model can
+provide the posterior probability that the active treatment affects
+mortality differently than it affects the nonfatal components of an
+ordinal scale (whether univariate or longitudinal).  When there is a
+large differential treatment effect by outcome category, the evidence
+can be definitive.  But there is no free lunch.  If the study (as is
+usually the case) is not powered to detect a mortality difference on
+its own, the number of deaths is likely to be such that the posterior
+distribution of the differential outcome effect will be somewhat wide.  In this case the posterior probability of a differential effect will likely
+be between 0.15 and 0.85.  The exception would be if the investigators
+are confident in expressing much skepticism for this effect in the
+prior distribution for the constrained partial proportional odds model
+parameter.  In other words, if the investigators specified a prior distribution for the special treatment effect on death such that the prior probability of the treatment odds ratio on mortality being different by more than a factor of 1.25 from the odds ratio over all nonfatal endpoints is very small, more information will be borrowed between fatal and non-fatal endpoints and the probability of similarity of effects on mortality as on non-fatal endpoints may be high.  Note that assuming the proportional odds model overall, and not using the partial proportional odds model, is tantamount to having a prior for the special treatment effect on death having all its mass at a 1.0 ratio of odds ratios.
+
+Mathematically we express the constrained partial PO model for assessing consistency of treatment effect for nonfatal outcomes vs. death as follows.  Let $X$ denote the adjustment baseline covariates (that do not interact with treatment) and denote treatments A, B by $Tx=A$ and $Tx=B$.  Let Y be the ordinal outcome with levels 1, 2, ..., $k$ where $k$ denotes death.  The model may be written in terms of the logit of the outcome being level $y$ or higher, where $y \geq 2$: 
+
+$$\text{logit}(Y \geq j | X, Tx) = \alpha_{j} + X\beta + \gamma[Tx=B] + \tau[y=k \cap Tx=B]$$
+
+where $\gamma$ is the treatment effect on the log odds scale and $\tau$ is the additional treatment effect for death, and $[x]$ denotes an indicator function for $x$ being true.  $\tau=0$ means the same effect on death.  A prior distribution for $\gamma$ would typically specify a low probability of an very large or very small treatment OR, e.g. $P(e^{\gamma} > 2) = P(e^\gamma < \frac{1}{2}) = 0.05$ where $\gamma$ has a normal distribution with mean 0.  Prior beliefs may dictate that the special effect on death is less than $\gamma$ which could be encoded as a correlated prior.  More simple is to use a prior for $\tau$ such that $P(e^\tau > \frac{3}{2}) = P(e^\tau < \frac{2}{3}) = 0.05$ where $\tau$ has a normal distribution with mean zero. 
+
+To achieve high Bayesian power it is recommended that the primary analysis either assumes a common effect of treatment for all outcomes, or puts a narrow prior on the differential effect on death.  See [this](https://fharrell.com/post/yborrow) for how to simulate Bayesian power for assessing mortality effects with different amounts of information borrowing.
+
+#### Displaying Results of Longitudinal Ordinal Models
+
+Similar to the table mock-up above for displaying probabilities of
+outcomes of various severities by treatment, a longitudinal model
+result can be displayed as a line graph with two smooth time
+trajectories with uncertainty bands.  Suppose that the ordinal scale Y
+were coded as 0, 1, ..., 16 with 16=death.  For any y = 1, 2, ..., 16 the
+unified Bayesian ordinal model can be used to estimate the posterior mean
+probability that Y $\geq$ y (outcome category y or worse) as a
+function of treatment and days since 
+randomization.  If PO holds, these 16 graphs will all have the same
+relative shapes on the logit probability scale, but if the partial PO
+model is used, they will differ in shapes and relative treatment
+comparisons for those Y categories for which PO was relaxed (e.g.,
+death).  When time interacts with treatment, the curves will not be
+parallel on the logit scale.
+
+Such graphs have clinical relevance, and the posterior distributions
+of parameters behind the graphs can be transformed to estimate time to
+events and other derived quantities.
+
+To display the cumulative incidence of death across days, supposing death is Y=16, one merely computes the cumulative product of the daily probabilities that Y < 16 from the longitudinal PO model, then subtracts this product from 1.0.  For the cumulative incidence of death, stroke, or renal replacement therapy, just replace the 16 with 14^[This works formally when the events being pooled are terminal events.].  This is explained in more detail [here](https://hbiostat.org/stat/binarySurv.html).
+
+For a simplified 4-level longitudinal outcome the following graph shows how the main results can be displayed.
+
+<img src="longordPresent.png" width=95%>
+
+A Markov model makes things more explicit and is more likely to fit serial correlation patterns seen in COVID-19 and most other situations.  From the fitted Markov model one computes state occupancy probabilities by unconditioning on the previous state.  Code for this is provided [here](https://hbiostat.org/proj/covid19/orchid.html) and [here](https://hbiostat.org/stat/irreg.html).  Occupancy probabilities at time $t$ are $\Pr(Y = y | X, t)$ or $\Pr(Y \geq y | X, t)$ where the $X$s are measured only at baseline.  When a state $y_a$ is an absorbing state in the Markov process such as death, $\Pr(Y = y_{a} | X, t)$ as a function of $t$ is the cumulative incidence function for the absorbing event.  For non-absorbing events (e.g., hospitalization, being on a ventilator), state occupancy probabilities can go up and down over time.
+
+<a name="long2time"></a>
+
+#### Converting Longitudinal Model Results to Time Scale
+
+As described [earlier](#tprob), when time to event is computed from
+individual patient experiences, e.g. time until a given subject
+reaches a target outcome severity, statistical power is lost when the
+underlying measurements do not manifest as all-or-nothing 000000001 (true binary
+outcome, no event on days 1-8, terminating event on day 9).  Time to
+event fails to capture close calls.  By using as much resolution in
+the raw data as possible, longitudinal analysis gains power.  
+
+Some investigators are not used to seeing odds ratios for quantifying
+efficacy.  And when there is a time × treatment interaction so that
+the effect is a function of follow-up time, it is useful to choose a
+single time for the pivotal analysis, usually the last planned
+follow-up time.   Many investigators like to use the time scale in
+quantifying efficacy, perhaps even more so when the choice of a single
+time point for the comparison is difficult.  The longitudinal model
+can provide a covariate-specific time-scale effect if the investigator
+can name the criterion to achieve.  Bayesian methods makes this easier
+and more accurate than frequentist counterparts due to the fact that
+if one can write the desired estimand as a function of the
+longitudinal model parameters, one merely takes a few thousand
+posterior draws from those parameters, computes the derived parameter
+separately for each draw, and then using these few thousand computed
+values to obtain an exact (to within simulation error) distribution
+for the derived quantity.
+
+As an example, suppose there is one baseline covariate $X$, a
+time-response profile captured by a regression spline function, and
+the interaction between treatment and this profile.  This allows for a
+general smooth time-dependency in the treatment effect.  Define the
+target outcome as $Y \leq y$.  Then for a given treatment and
+covariate value $X=x$, and for a given draw from the posterior
+distribution of the model parameters, compute the first time for which
+the posterior $\Pr(Y \leq y) > 0.9$.
+
+From the same draw and $x$ compute the corresponding time for the
+other treatment.  Then compute the difference of the two times.
+Combine the differences over all draws to derive the posterior
+distribution of how much earlier the new treatment reached the
+clinical target.
+
+See [this](https://hbiostat.org/proj/covid19/orchid.html) for examples of exact Bayesian inference for mean restricted time in a certain state.
+
+### Random Effects and Absorbing States
+As part of the ORCHID study we have done a significant amount of research on alternative analytic approaches including ordinal state transition models, and have done a considerable amount of work on absorbing states.   Mixed effect models do not really handle absorbing states, and if the ordinal value for the absorbing state is carried forward this induces a very high intra-patient correlation that requires random effects (and their variance) to be very large, making the model have a high effective number of parameters and become unstable.  In addition it is unlikely to predict accurately.  For these reasons it is not recommended to use random effects to handle serial correlation, and we recommend instead a simple Markov model.
+
+##### Resources
+
+* Examples of [analysis of absorbing states](https://hbiostat.org/R/rmsb/blrm.html)
+* [Notes](https://hbiostat.org/proj/covid19/model.html) from discussions about absorbing states and analysis choices
+* [Bayesian modeling discussions](https://discourse.datamethods.org/t/fully-sequential-bayesian-clinical-trial-design-for-in-hospital-treatment-of-covid-19)
+* [Inner workings of Stan code](https://github.com/harrelfe/stan/blob/master/notes.md) used in the R `rmsb` package
+* Detailed longitudinal analysis of [ORCHID](https://hbiostat.org/proj/covid19/orchid.html)
+* Detailed longitudinal analysis of [VIOLET 2](https://hbiostat.org/proj/covid19/violet2.html)
+* Exploration of [Markov model with irregular measurement times](https://hbiostat.org/stat/irreg.html)
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
